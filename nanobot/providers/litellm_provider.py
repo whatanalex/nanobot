@@ -11,6 +11,9 @@ from litellm import acompletion
 from nanobot.providers.base import LLMProvider, LLMResponse, ToolCallRequest
 from nanobot.providers.registry import find_by_model, find_gateway
 
+from loguru import logger
+from pprint import pformat
+
 
 # Standard OpenAI chat-completion message keys; extras (e.g. reasoning_content) are stripped for strict providers.
 _ALLOWED_MSG_KEYS = frozenset({"role", "content", "tool_calls", "tool_call_id", "name"})
@@ -220,6 +223,18 @@ class LiteLLMProvider(LLMProvider):
             kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
         
+        # Add builtin web-search for kimi
+        if model.lower() == "moonshot/kimi-k2-turbo-preview":
+            # Bug workaround
+            # https://github.com/openai/openai-agents-python/issues/2155
+            # https://github.com/Datus-ai/Datus-agent/pull/404
+            kwargs["thinking"] = {"type": "disabled"}
+            kwargs["tools"].append({"function":{"name": "$web_search"}, "type": "builtin_function"})
+        
+        logger.error("WYC request" + "="*20)
+        logger.error(pformat(kwargs))
+        logger.error("-"*30)
+
         try:
             response = await acompletion(**kwargs)
             return self._parse_response(response)
@@ -234,6 +249,9 @@ class LiteLLMProvider(LLMProvider):
         """Parse LiteLLM response into our standard format."""
         choice = response.choices[0]
         message = choice.message
+        logger.error("WYC respone" + "="*20)
+        logger.error(pformat(message))
+        logger.error("-"*30)
         
         tool_calls = []
         if hasattr(message, "tool_calls") and message.tool_calls:

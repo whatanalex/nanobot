@@ -332,7 +332,7 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         default_api_base="https://api.moonshot.ai/v1",   # intl; use api.moonshot.cn for China
         strip_model_prefix=False,
         model_overrides=(
-            ("kimi-k2.5", {"temperature": 1.0}),
+            ("kimi-k2-turbo-preview", {"temperature": 1.0}),
         ),
     ),
 
